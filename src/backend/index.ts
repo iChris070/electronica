@@ -1,22 +1,25 @@
-import { Server } from 'azle';
+import { Server, int } from 'azle';
 import express, { NextFunction, Request, Response } from 'express';
 
-type Book = {
+type ElectronicComponent = {
     id: number;
-    title: string;
-    author: string;
+    name: string;
+    type: string;
+    price: number;
 }
 
-let books: Book[] = [{
+let electronicComponents: ElectronicComponent[] = [{
     id: 1,
-    title: 'ciaphas cain hero of the imperium',
-    author: 'Alex Stewart'
-}]
+    name: 'Resistor',
+    type: 'Passive',
+    price: 22
+}];
 
 function logger(req: Request, res: Response, next: NextFunction) {
     console.log("ok this works");
     next();
 }
+
 
 export default Server(() => {
     const app = express();
@@ -26,49 +29,57 @@ export default Server(() => {
     app.use(logger);
 
     //GET
-    app.get('/books', (req, res) => {
-        res.json(books);
+    app.get('/components', (req, res) => {
+        const totalPrices = electronicComponents.reduce((sum, component) => sum + component.price, 0);
+
+        res.json({
+            message: 'Lista de componentes:',
+            components: electronicComponents,
+            totalPrices: totalPrices
+        });
     });
 
     //POST
-    app.post("/books/:id", (req, res) => {
+    app.post("/components/:id", (req, res) => {
         const id = parseInt(req.params.id);
-        const Book = req.body;
-        const libroExistente = books.find((book) => book.id === id);
-    
-        if (libroExistente) {
-            res.status(404).send("this book already exist");
+        const component = req.body;
+        const existingComponent = electronicComponents.find((c) => c.id === id);
+
+        if (existingComponent) {
+            res.status(404).send("This component already exists");
             return;
         }
-        books.push({ ...Book, id });
-    
-        res.send("OK");
+        electronicComponents.push({ ...component, id });
+
+        res.send("added component");
+
     });
 
     //PUT
-    app.put("/books/:id", (req, res) =>{
+    app.put("/components/:id", (req, res) => {
         const id = parseInt(req.params.id);
-        const book = books.find((book) => book.id === id);
+        const component = electronicComponents.find((c) => c.id === id);
 
-        if (!book) {
-            res.status(404).send("Not found");
+        if (!component) {
+            res.status(404).send("Component not found");
             return;
         }
 
-        const updateBook = { ...book, ...req.body };
+        const updatedComponent = { ...component, ...req.body };
 
-        books = books.map((b) => b.id === updateBook.id ? updateBook : b);
+        electronicComponents = electronicComponents.map((c) => c.id === updatedComponent.id ? updatedComponent : c);
 
-        res.send("ok");
-
-    })
+        res.send("OK");
+    });
 
     //DELETE
-    app.delete("/books/:id", (req, res) =>{
+    app.delete("/components/:id", (req, res) => {
         const id = parseInt(req.params.id);
-        books = books.filter((book) => book.id !== id);
-        res.send("ok")
+        electronicComponents = electronicComponents.filter((c) => c.id !== id);
+        res.send("removed component");
     });
 
     return app.listen();
 });
+
+
