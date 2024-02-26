@@ -18,7 +18,7 @@ let electronicComponents: ElectronicComponent[] = [{
 }];
 
 function logger(req: Request, res: Response, next: NextFunction) {
-    console.log("ok this works");
+    console.log("its working");
     next();
 }
 
@@ -79,6 +79,29 @@ export default Server(() => {
         res.json({
             message: "Component added successfully",
             newComponent: newComponent,
+        });
+    });
+
+    app.post("/componentSalida", (req, res) => {
+        const { id, quantity } = req.body;
+        const component = electronicComponents.find((c) => c.id === id);
+    
+        if (!component) {
+            res.status(404).send("Component not found");
+            return;
+        }
+    
+        if (quantity <= 0 || quantity > component.amount) {
+            res.status(400).send("Invalid quantity");
+            return;
+        }
+    
+        component.amount -= quantity;
+    
+        res.json({
+            message: "Component quantity updated successfully",
+            updatedComponent: component,
+            confirmation: `Sold ${quantity} unit(s) of ${component.name}`,
         });
     });
 
